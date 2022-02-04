@@ -249,7 +249,7 @@ unsigned char key_driver(void)
 
     key_press = key_input;                    // 读按键I/O电平
 
-			//P54 = key_press;//蜂鸣器输出
+			P54 = key_press;//蜂鸣器输出
 	
     switch (key_state)
     {
@@ -386,9 +386,9 @@ void main()
 //											 UartSend(IapRead(0x0400));	
 
 										ADC_low = ReadIapADC(0x0200);
-										if (ADC_low > 1000||ADC_low < 700) ADC_low=870;
+										if (ADC_low > 1000||ADC_low < 700) ADC_low=860;
 										ADC_high = ReadIapADC(0x0000);
-										if (ADC_high <700 || ADC_high >1000) ADC_high=820;
+										if (ADC_high <700 || ADC_high >1000) ADC_high=810;
 									sprintf(string,"Adc_set_Low is %d!\r\n",ADC_low);
 								  SendString(string);										
 									sprintf(string,"Adc_set_High is %d!\r\n",ADC_high);
@@ -484,7 +484,7 @@ switch(IapRead(0x0400))
             
 
 				
-			if(pwm_count>100)   pwm_count=0;	 
+			if(pwm_count>20)   pwm_count=0;	 
 
        if (time_10ms_ok)            //每50ms执行一次，  
         {  
@@ -526,20 +526,20 @@ switch(IapRead(0x0400))
 											{
 											if(adc_value < ADC_set+10)// near adc_set
 												{
-														pwm = 50;
+														pwm = 17;
 												}
 												else if(adc_value < ADC_set+20)  //adc_set mid
 												{
-													  pwm=80;
+													  pwm=17;
 												}
 												else  //adc_set low
 												{
-														pwm=99;
+														pwm=18;
 												}
 											}
 											else //adc_set -- adc_set-5
 											{
-									      pwm = 20;
+									      pwm = 17;
 											}
 									}else
 							{
