@@ -14,21 +14,21 @@ typedef     unsigned char   u8;
 typedef     unsigned int    u16;
 typedef     unsigned long   u32;
 
-#define     Tmp_Length          5      //¶ÁĞ´EEPROM»º³å³¤¶È
+#define     Tmp_Length          5      //è¯»å†™EEPROMç¼“å†²é•¿åº¦
 
-#define     UART1_BUF_LENGTH    (Tmp_Length+6)  //´®¿Ú»º³å³¤¶È
+#define     UART1_BUF_LENGTH    (Tmp_Length+6)  //ä¸²å£ç¼“å†²é•¿åº¦
 
 u16 ADC_low = 0;
 u16 ADC_high = 0;
 u8  RX1_TimeOut;
-u8  TX1_Cnt;    //·¢ËÍ¼ÆÊı
-u8  RX1_Cnt;    //½ÓÊÕ¼ÆÊı
-bit B_TX1_Busy; //·¢ËÍÃ¦±êÖ¾
+u8  TX1_Cnt;    //å‘é€è®¡æ•°
+u8  RX1_Cnt;    //æ¥æ”¶è®¡æ•°
+bit B_TX1_Busy; //å‘é€å¿™æ ‡å¿—
 
-u8  BCC_State;    //Òì»ò½á¹û
+u8  BCC_State;    //å¼‚æˆ–ç»“æœ
 
-u8  xdata RX1_Buffer[UART1_BUF_LENGTH]; //½ÓÊÕ»º³å
-u8  xdata   tmp[Tmp_Length];        //EEPROM²Ù×÷»º³å
+u8  xdata RX1_Buffer[UART1_BUF_LENGTH]; //æ¥æ”¶ç¼“å†²
+u8  xdata   tmp[Tmp_Length];        //EEPROMæ“ä½œç¼“å†²
 
 bit busy;
 
@@ -38,10 +38,10 @@ char *ID="test\r\n";
 
 void IapIdle()
 {
-    IAP_CONTR = 0;                              //¹Ø±ÕIAP¹¦ÄÜ
-    IAP_CMD = 0;                                //Çå³ıÃüÁî¼Ä´æÆ÷
-    IAP_TRIG = 0;                               //Çå³ı´¥·¢¼Ä´æÆ÷
-    IAP_ADDRH = 0x80;                           //½«µØÖ·ÉèÖÃµ½·ÇIAPÇøÓò
+    IAP_CONTR = 0;                              //å…³é—­IAPåŠŸèƒ½
+    IAP_CMD = 0;                                //æ¸…é™¤å‘½ä»¤å¯„å­˜å™¨
+    IAP_TRIG = 0;                               //æ¸…é™¤è§¦å‘å¯„å­˜å™¨
+    IAP_ADDRH = 0x80;                           //å°†åœ°å€è®¾ç½®åˆ°éIAPåŒºåŸŸ
     IAP_ADDRL = 0;
 }
 
@@ -49,45 +49,45 @@ char IapRead(int addr)
 {
     char dat;
 
-    IAP_CONTR = 0x80;                           //Ê¹ÄÜIAP
-    IAP_TPS = 12;                               //ÉèÖÃµÈ´ı²ÎÊı12MHz
-    IAP_CMD = 1;                                //ÉèÖÃIAP¶ÁÃüÁî
-    IAP_ADDRL = addr;                           //ÉèÖÃIAPµÍµØÖ·
-    IAP_ADDRH = addr >> 8;                      //ÉèÖÃIAP¸ßµØÖ·
-    IAP_TRIG = 0x5a;                            //Ğ´´¥·¢ÃüÁî(0x5a)
-    IAP_TRIG = 0xa5;                            //Ğ´´¥·¢ÃüÁî(0xa5)
+    IAP_CONTR = 0x80;                           //ä½¿èƒ½IAP
+    IAP_TPS = 12;                               //è®¾ç½®ç­‰å¾…å‚æ•°12MHz
+    IAP_CMD = 1;                                //è®¾ç½®IAPè¯»å‘½ä»¤
+    IAP_ADDRL = addr;                           //è®¾ç½®IAPä½åœ°å€
+    IAP_ADDRH = addr >> 8;                      //è®¾ç½®IAPé«˜åœ°å€
+    IAP_TRIG = 0x5a;                            //å†™è§¦å‘å‘½ä»¤(0x5a)
+    IAP_TRIG = 0xa5;                            //å†™è§¦å‘å‘½ä»¤(0xa5)
     _nop_();
-    dat = IAP_DATA;                             //¶ÁIAPÊı¾İ
-    IapIdle();                                  //¹Ø±ÕIAP¹¦ÄÜ
+    dat = IAP_DATA;                             //è¯»IAPæ•°æ®
+    IapIdle();                                  //å…³é—­IAPåŠŸèƒ½
 
     return dat;
 }
 
 void IapProgram(int addr, char dat)
 {
-    IAP_CONTR = 0x80;                           //Ê¹ÄÜIAP
-    IAP_TPS = 12;                               //ÉèÖÃµÈ´ı²ÎÊı12MHz
-    IAP_CMD = 2;                                //ÉèÖÃIAPĞ´ÃüÁî
-    IAP_ADDRL = addr;                           //ÉèÖÃIAPµÍµØÖ·
-    IAP_ADDRH = addr >> 8;                      //ÉèÖÃIAP¸ßµØÖ·
-    IAP_DATA = dat;                             //Ğ´IAPÊı¾İ
-    IAP_TRIG = 0x5a;                            //Ğ´´¥·¢ÃüÁî(0x5a)
-    IAP_TRIG = 0xa5;                            //Ğ´´¥·¢ÃüÁî(0xa5)
+    IAP_CONTR = 0x80;                           //ä½¿èƒ½IAP
+    IAP_TPS = 12;                               //è®¾ç½®ç­‰å¾…å‚æ•°12MHz
+    IAP_CMD = 2;                                //è®¾ç½®IAPå†™å‘½ä»¤
+    IAP_ADDRL = addr;                           //è®¾ç½®IAPä½åœ°å€
+    IAP_ADDRH = addr >> 8;                      //è®¾ç½®IAPé«˜åœ°å€
+    IAP_DATA = dat;                             //å†™IAPæ•°æ®
+    IAP_TRIG = 0x5a;                            //å†™è§¦å‘å‘½ä»¤(0x5a)
+    IAP_TRIG = 0xa5;                            //å†™è§¦å‘å‘½ä»¤(0xa5)
     _nop_();
-    IapIdle();                                  //¹Ø±ÕIAP¹¦ÄÜ
+    IapIdle();                                  //å…³é—­IAPåŠŸèƒ½
 }
 
 void IapErase(int addr)
 {
-    IAP_CONTR = 0x80;                           //Ê¹ÄÜIAP
-    IAP_TPS = 12;                               //ÉèÖÃµÈ´ı²ÎÊı12MHz
-    IAP_CMD = 3;                                //ÉèÖÃIAP²Á³ıÃüÁî
-    IAP_ADDRL = addr;                           //ÉèÖÃIAPµÍµØÖ·
-    IAP_ADDRH = addr >> 8;                      //ÉèÖÃIAP¸ßµØÖ·
-    IAP_TRIG = 0x5a;                            //Ğ´´¥·¢ÃüÁî(0x5a)
-    IAP_TRIG = 0xa5;                            //Ğ´´¥·¢ÃüÁî(0xa5)
+    IAP_CONTR = 0x80;                           //ä½¿èƒ½IAP
+    IAP_TPS = 12;                               //è®¾ç½®ç­‰å¾…å‚æ•°12MHz
+    IAP_CMD = 3;                                //è®¾ç½®IAPæ“¦é™¤å‘½ä»¤
+    IAP_ADDRL = addr;                           //è®¾ç½®IAPä½åœ°å€
+    IAP_ADDRH = addr >> 8;                      //è®¾ç½®IAPé«˜åœ°å€
+    IAP_TRIG = 0x5a;                            //å†™è§¦å‘å‘½ä»¤(0x5a)
+    IAP_TRIG = 0xa5;                            //å†™è§¦å‘å‘½ä»¤(0xa5)
     _nop_();                                    //
-    IapIdle();                                  //¹Ø±ÕIAP¹¦ÄÜ
+    IapIdle();                                  //å…³é—­IAPåŠŸèƒ½
 }
 
 unsigned int ReadIapADC(int addr)
@@ -117,8 +117,8 @@ void UartIsr() interrupt 4
 }
 
 
-//ÔÚÊı¾İ´«Êä»òÕßÊı¾İÏÂÔØ¹ı³ÌÖĞ;Í¨³£Òª±£Ö¤Êı¾İµÄ¿É¿¿ĞÔºÍ°²È«ĞÔ;ËùÒÔ
-//·¢ËÍ·½ºÍ½ÓÊÕ·½ÒªÔ¼¶¨¹²Í¬µÄĞ­Òé;¶øÕâ¸öĞ­ÒéÖĞ³£³£»á³öÏÖĞ£ÑéºÍµÄÔËËã¡£
+//åœ¨æ•°æ®ä¼ è¾“æˆ–è€…æ•°æ®ä¸‹è½½è¿‡ç¨‹ä¸­;é€šå¸¸è¦ä¿è¯æ•°æ®çš„å¯é æ€§å’Œå®‰å…¨æ€§;æ‰€ä»¥
+//å‘é€æ–¹å’Œæ¥æ”¶æ–¹è¦çº¦å®šå…±åŒçš„åè®®;è€Œè¿™ä¸ªåè®®ä¸­å¸¸å¸¸ä¼šå‡ºç°æ ¡éªŒå’Œçš„è¿ç®—ã€‚
  unsigned char calc_nmea_checksum(const char *setence)
 {
      unsigned char checksum = 0;
@@ -135,14 +135,14 @@ void UartIsr() interrupt 4
 
 void UartInit(void)		//115200bps@11.0592MHz
 {
-	SCON = 0x50;		//8Î»Êı¾İ,¿É±ä²¨ÌØÂÊ
-	AUXR &= 0xBF;		//¶¨Ê±Æ÷Ê±ÖÓ12TÄ£Ê½
-	AUXR &= 0xFE;		//´®¿Ú1Ñ¡Ôñ¶¨Ê±Æ÷1Îª²¨ÌØÂÊ·¢ÉúÆ÷
-	TMOD &= 0x0F;		//ÉèÖÃ¶¨Ê±Æ÷Ä£Ê½
-	TL1 = 0xFE;		//ÉèÖÃ¶¨Ê±³õÊ¼Öµ
-	TH1 = 0xFF;		//ÉèÖÃ¶¨Ê±³õÊ¼Öµ
-	ET1 = 0;		//½ûÖ¹¶¨Ê±Æ÷%dÖĞ¶Ï
-	TR1 = 1;		//¶¨Ê±Æ÷1¿ªÊ¼¼ÆÊ±
+	SCON = 0x50;		//8ä½æ•°æ®,å¯å˜æ³¢ç‰¹ç‡
+	AUXR &= 0xBF;		//å®šæ—¶å™¨æ—¶é’Ÿ12Tæ¨¡å¼
+	AUXR &= 0xFE;		//ä¸²å£1é€‰æ‹©å®šæ—¶å™¨1ä¸ºæ³¢ç‰¹ç‡å‘ç”Ÿå™¨
+	TMOD &= 0x0F;		//è®¾ç½®å®šæ—¶å™¨æ¨¡å¼
+	TL1 = 0xFE;		//è®¾ç½®å®šæ—¶åˆå§‹å€¼
+	TH1 = 0xFF;		//è®¾ç½®å®šæ—¶åˆå§‹å€¼
+	ET1 = 0;		//ç¦æ­¢å®šæ—¶å™¨%dä¸­æ–­
+	TR1 = 1;		//å®šæ—¶å™¨1å¼€å§‹è®¡æ—¶
 	
 	  B_TX1_Busy = 0;
     TX1_Cnt = 0;
@@ -159,9 +159,9 @@ void UartSend(char dat)
 void SendString(   char *s)
 {
  
-    while (*s)                   //¼ì²â×Ö·û´®½áÊø±êÖ¾
+    while (*s)                   //æ£€æµ‹å­—ç¬¦ä¸²ç»“æŸæ ‡å¿—
     {
-        UartSend(*s++);         //·¢ËÍµ±Ç°×Ö·û
+        UartSend(*s++);         //å‘é€å½“å‰å­—ç¬¦
     }
 		
 }
@@ -170,48 +170,48 @@ void hal_init_ADC()
 {
  
 
-P3M0=P3M0&~(0x0C);//P32¡¢P33¸ß×è
-P3M1=P3M1|0x0c;//P32¡¢P33¸ß×è
+P3M0=P3M0&~(0x0C);//P32ã€P33é«˜é˜»
+P3M1=P3M1|0x0c;//P32ã€P33é«˜é˜»
 
 
      
-	 //ADCCFG¼Ä´æÆ÷
+	 //ADCCFGå¯„å­˜å™¨
 	 //    B7__B6__ B5    __B4__B3__B2__B1__B0__ 
 	 //	  - __- __RESFMT __- __   SPEED[3:0] __
-	 //    RESFMT£º=1 ÓÒ¶ÔÆë	:=0 ×ó¶ÔÆë
-	 //    SPEED adcÊ±ÖÓ¿ØÖÆ	 ADCÊ±ÖÓ:SYSclk/2/16/SPEED 
-	 //          Èç£º SPEED=1111£¬SYSclk=24MHz¡£ ÔòFadc=24M/2/16/16=46.875kHz, tadc=21ms
-    ADCCFG = 0x22; //f_ÉèÖÃADCÊ±ÖÓ:Fadc=11M/2/16/2=171kHz,tadc=1.3us
-                   //2_ÉèÖÃÎªÓÒ¶ÔÆë
+	 //    RESFMTï¼š=1 å³å¯¹é½	:=0 å·¦å¯¹é½
+	 //    SPEED adcæ—¶é’Ÿæ§åˆ¶	 ADCæ—¶é’Ÿ:SYSclk/2/16/SPEED 
+	 //          å¦‚ï¼š SPEED=1111ï¼ŒSYSclk=24MHzã€‚ åˆ™Fadc=24M/2/16/16=46.875kHz, tadc=21ms
+    ADCCFG = 0x22; //f_è®¾ç½®ADCæ—¶é’Ÿ:Fadc=11M/2/16/2=171kHz,tadc=1.3us
+                   //2_è®¾ç½®ä¸ºå³å¯¹é½
 									 //adc
-    //ADC_CONTR¼Ä´æÆ÷
+    //ADC_CONTRå¯„å­˜å™¨
 	//    B7__________B6__________B5 ________B4__B3__B2__B1__B0__ 
 	//	  ADC_POWER___ADC_STRAT___ADC_FLAG __- __  ADC_CHS[3:0] __
-	//    ADC_STRAT£º=1 ¿ªÊ¼×ª»»£¬Íê³É×Ô¶¯ÇåÁã	:=0 ÎŞ×÷ÓÃ
-	//    ADC_FLAG£º×ª»»Íê³ÉÓ²¼şÖÃ1£¬±ØĞëÈí¼şÇåÁã¡£ 
-	//	  ADC_CHS[3:0]Ñ¡ÔñÍ¨µÀ0-14ÊÇ(P1.0¡ªP1.7,P0.0-P0.6),15ÊÇÄÚ²¿refvµÄµçÑ¹1.344
-  //              Ñ¡ÔñÍ¨µÀ1001 ÊÇP01
+	//    ADC_STRATï¼š=1 å¼€å§‹è½¬æ¢ï¼Œå®Œæˆè‡ªåŠ¨æ¸…é›¶	:=0 æ— ä½œç”¨
+	//    ADC_FLAGï¼šè½¬æ¢å®Œæˆç¡¬ä»¶ç½®1ï¼Œå¿…é¡»è½¯ä»¶æ¸…é›¶ã€‚ 
+	//	  ADC_CHS[3:0]é€‰æ‹©é€šé“0-14æ˜¯(P1.0â€”P1.7,P0.0-P0.6),15æ˜¯å†…éƒ¨refvçš„ç”µå‹1.344
+  //              é€‰æ‹©é€šé“1001 æ˜¯P01
        
-    //ADC_CONTR = 0x8A;        //´ò¿ªADCÄ£¿éµçÔ´,Ñ¡ÔñÍ¨µÀ1010 ¾ÍÊÇP02
+    //ADC_CONTR = 0x8A;        //æ‰“å¼€ADCæ¨¡å—ç”µæº,é€‰æ‹©é€šé“1010 å°±æ˜¯P02
 }
 
 void api_read_adc(unsigned int *Adc_result,unsigned char adc_channel)
 {
      
-    ADC_CONTR = (0xC0|adc_channel);     //Æô¶¯AD×ª»»
+    ADC_CONTR = (0xC0|adc_channel);     //å¯åŠ¨ADè½¬æ¢
     _nop_();
     _nop_();
-    while (!(ADC_CONTR & 0x20));            //²éÑ¯ADCÍê³É±êÖ¾
-    ADC_CONTR &= ~0x20;                      //ÇåÍê³É±êÖ¾
-    *Adc_result = (ADC_RES<<8|ADC_RESL);    //¶ÁÈ¡ADC½á¹û¡£ÓÒ¶ÔÆë£¬¸ßÎ»×Ô¶¯Ìî³äÎª0
+    while (!(ADC_CONTR & 0x20));            //æŸ¥è¯¢ADCå®Œæˆæ ‡å¿—
+    ADC_CONTR &= ~0x20;                      //æ¸…å®Œæˆæ ‡å¿—
+    *Adc_result = (ADC_RES<<8|ADC_RESL);    //è¯»å–ADCç»“æœã€‚å³å¯¹é½ï¼Œé«˜ä½è‡ªåŠ¨å¡«å……ä¸º0
 
 
-    ADC_CONTR = (0xC0|adc_channel);   //Æô¶¯AD×ª»»
+    ADC_CONTR = (0xC0|adc_channel);   //å¯åŠ¨ADè½¬æ¢
     _nop_();
     _nop_();
-    while (!(ADC_CONTR & 0x20));            //²éÑ¯ADCÍê³É±êÖ¾
-    ADC_CONTR &= ~0x20;                     //ÇåÍê³É±êÖ¾
-	  *Adc_result = (ADC_RES<<8|ADC_RESL);     //¶ÁÈ¡ADC½á¹û¡£ÓÒ¶ÔÆë£¬¸ßÎ»×Ô¶¯Ìî³äÎª0
+    while (!(ADC_CONTR & 0x20));            //æŸ¥è¯¢ADCå®Œæˆæ ‡å¿—
+    ADC_CONTR &= ~0x20;                     //æ¸…å®Œæˆæ ‡å¿—
+	  *Adc_result = (ADC_RES<<8|ADC_RESL);     //è¯»å–ADCç»“æœã€‚å³å¯¹é½ï¼Œé«˜ä½è‡ªåŠ¨å¡«å……ä¸º0
 }
 
 
@@ -221,20 +221,20 @@ unsigned char string[20];
 unsigned int  pwm=0;
 unsigned int  pwm_count=0;
 unsigned int 	key=0; 
-unsigned int  time_10ms_ok=0;
+unsigned int  time_50ms_ok=0;
 unsigned int  key_time=0;
 unsigned int  start_state=0;
 
  /*=============
-µÍ²ã°´¼ü£¨I/0£©É¨Ãèº¯Êı£¬¼´µÍ²ã°´¼üÉè±¸Çı¶¯£¬Ö»·µ»ØÎŞ¼ü¡¢¶Ì°´ºÍ³¤°´¡£
+ä½å±‚æŒ‰é”®ï¼ˆI/0ï¼‰æ‰«æå‡½æ•°ï¼Œå³ä½å±‚æŒ‰é”®è®¾å¤‡é©±åŠ¨ï¼Œåªè¿”å›æ— é”®ã€çŸ­æŒ‰å’Œé•¿æŒ‰ã€‚
 ===============*/
 
-#define key_input    P33    // °´¼üÊäÈë¿Ú
+#define key_input    P33    // æŒ‰é”®è¾“å…¥å£
 
-#define N_key    0             //ÎŞ¼ü
-#define S_key    1             //µ¥¼ü
-#define D_key    2             //Ë«¼ü
-#define L_key    3             //³¤¼ü
+#define N_key    0             //æ— é”®
+#define S_key    1             //å•é”®
+#define D_key    2             //åŒé”®
+#define L_key    3             //é•¿é”®
 
 #define key_state_0 0
 #define key_state_1 1
@@ -247,51 +247,51 @@ unsigned char key_driver(void)
     static unsigned char key_state = key_state_0, key_time = 0;
     unsigned char key_press, key_return = N_key;
 
-    key_press = key_input;                    // ¶Á°´¼üI/OµçÆ½
+    key_press = key_input;                    // è¯»æŒ‰é”®I/Oç”µå¹³
 
-			P54 = key_press;//·äÃùÆ÷Êä³ö
+			P54 = key_press;//èœ‚é¸£å™¨è¾“å‡º
 	
     switch (key_state)
     {
-      case key_state_0:                              // °´¼ü³õÊ¼Ì¬
-        if (key_press) key_state = key_state_1;      // ¼ü±»°´ÏÂ£¬×´Ì¬×ª»»µ½°´¼üÏû¶¶ºÍÈ·ÈÏ×´Ì¬;ÉÏÉıÑØ×´Ì¬¼¤»î
+      case key_state_0:                              // æŒ‰é”®åˆå§‹æ€
+        if (key_press) key_state = key_state_1;      // é”®è¢«æŒ‰ä¸‹ï¼ŒçŠ¶æ€è½¬æ¢åˆ°æŒ‰é”®æ¶ˆæŠ–å’Œç¡®è®¤çŠ¶æ€;ä¸Šå‡æ²¿çŠ¶æ€æ¿€æ´»
         break;
       
-      case key_state_1:                      // °´¼üÏû¶¶ÓëÈ·ÈÏÌ¬
+      case key_state_1:                      // æŒ‰é”®æ¶ˆæŠ–ä¸ç¡®è®¤æ€
         if (key_press)
         {
              key_time = 0;                   //  
-             key_state = key_state_2;   // °´¼üÈÔÈ»´¦ÓÚ°´ÏÂ£¬Ïû¶¶Íê³É£¬×´Ì¬×ª»»µ½°´ÏÂ¼üÊ±¼äµÄ¼ÆÊ±×´Ì¬£¬µ«·µ»ØµÄ»¹ÊÇÎŞ¼üÊÂ¼ş
+             key_state = key_state_2;   // æŒ‰é”®ä»ç„¶å¤„äºæŒ‰ä¸‹ï¼Œæ¶ˆæŠ–å®Œæˆï¼ŒçŠ¶æ€è½¬æ¢åˆ°æŒ‰ä¸‹é”®æ—¶é—´çš„è®¡æ—¶çŠ¶æ€ï¼Œä½†è¿”å›çš„è¿˜æ˜¯æ— é”®äº‹ä»¶
         }
         else
-             key_state = key_state_0;   // °´¼üÒÑÌ§Æğ£¬×ª»»µ½°´¼ü³õÊ¼Ì¬¡£´Ë´¦Íê³ÉºÍÊµÏÖÈí¼şÏû¶¶£¬ÆäÊµ°´¼üµÄ°´ÏÂºÍÊÍ·Å¶¼ÔÚ´ËÏû¶¶µÄ¡£
+             key_state = key_state_0;   // æŒ‰é”®å·²æŠ¬èµ·ï¼Œè½¬æ¢åˆ°æŒ‰é”®åˆå§‹æ€ã€‚æ­¤å¤„å®Œæˆå’Œå®ç°è½¯ä»¶æ¶ˆæŠ–ï¼Œå…¶å®æŒ‰é”®çš„æŒ‰ä¸‹å’Œé‡Šæ”¾éƒ½åœ¨æ­¤æ¶ˆæŠ–çš„ã€‚
         break;
       
       case key_state_2:
         if(!key_press)
         {
-             key_return = S_key;        // ´ËÊ±°´¼üÊÍ·Å£¬ËµÃ÷ÊÇ²úÉúÒ»´Î¶Ì²Ù×÷£¬»ØËÍS_key
-             key_state = key_state_0;   // ×ª»»µ½°´¼ü³õÊ¼Ì¬
+             key_return = S_key;        // æ­¤æ—¶æŒ‰é”®é‡Šæ”¾ï¼Œè¯´æ˜æ˜¯äº§ç”Ÿä¸€æ¬¡çŸ­æ“ä½œï¼Œå›é€S_key
+             key_state = key_state_0;   // è½¬æ¢åˆ°æŒ‰é”®åˆå§‹æ€
         }
-        else if (++key_time >= 10)     // ¼ÌĞø°´ÏÂ£¬¼ÆÊ±¼Ó10ms£¨10msÎª±¾º¯ÊıÑ­»·Ö´ĞĞ¼ä¸ô£©
+        else if (++key_time >= 10)     // ç»§ç»­æŒ‰ä¸‹ï¼Œè®¡æ—¶åŠ 10msï¼ˆ10msä¸ºæœ¬å‡½æ•°å¾ªç¯æ‰§è¡Œé—´éš”ï¼‰
         {
-             key_return = L_key;        // °´ÏÂÊ±¼ä>1000ms£¬´Ë°´¼üÎª³¤°´²Ù×÷£¬·µ»Ø³¤¼üÊÂ¼ş
-             key_state = key_state_3;   // ×ª»»µ½µÈ´ı°´¼üÊÍ·Å×´Ì¬
+             key_return = L_key;        // æŒ‰ä¸‹æ—¶é—´>1000msï¼Œæ­¤æŒ‰é”®ä¸ºé•¿æŒ‰æ“ä½œï¼Œè¿”å›é•¿é”®äº‹ä»¶
+             key_state = key_state_3;   // è½¬æ¢åˆ°ç­‰å¾…æŒ‰é”®é‡Šæ”¾çŠ¶æ€
         }
         break;
 
-      case key_state_3:                 // µÈ´ı°´¼üÊÍ·Å×´Ì¬£¬´Ë×´Ì¬Ö»·µ»ØÎŞ°´¼üÊÂ¼ş
-        if (!key_press) key_state = key_state_0; //°´¼üÒÑÊÍ·Å£¬×ª»»µ½°´¼ü³õÊ¼Ì¬
+      case key_state_3:                 // ç­‰å¾…æŒ‰é”®é‡Šæ”¾çŠ¶æ€ï¼Œæ­¤çŠ¶æ€åªè¿”å›æ— æŒ‰é”®äº‹ä»¶
+        if (!key_press) key_state = key_state_0; //æŒ‰é”®å·²é‡Šæ”¾ï¼Œè½¬æ¢åˆ°æŒ‰é”®åˆå§‹æ€
         break;
     }
 		
-//      	P54 = key_press;                       //·äÃùÆ÷ 
+//      	P54 = key_press;                       //èœ‚é¸£å™¨ 
     return key_return;
 }
 
 /*=============
-ÖĞ¼ä²ã°´¼ü´¦Àíº¯Êı£¬µ÷ÓÃµÍ²ãº¯ÊıÒ»´Î£¬´¦ÀíË«»÷ÊÂ¼şµÄÅĞ¶Ï£¬·µ»ØÉÏ²ãÕıÈ·µÄÎŞ¼ü¡¢µ¥¼ü¡¢Ë«¼ü¡¢³¤¼ü4¸ö°´¼üÊÂ¼ş¡£
-±¾º¯ÊıÓÉÉÏ²ãÑ­»·µ÷ÓÃ£¬¼ä¸ô10ms
+ä¸­é—´å±‚æŒ‰é”®å¤„ç†å‡½æ•°ï¼Œè°ƒç”¨ä½å±‚å‡½æ•°ä¸€æ¬¡ï¼Œå¤„ç†åŒå‡»äº‹ä»¶çš„åˆ¤æ–­ï¼Œè¿”å›ä¸Šå±‚æ­£ç¡®çš„æ— é”®ã€å•é”®ã€åŒé”®ã€é•¿é”®4ä¸ªæŒ‰é”®äº‹ä»¶ã€‚
+æœ¬å‡½æ•°ç”±ä¸Šå±‚å¾ªç¯è°ƒç”¨ï¼Œé—´éš”10ms
 ===============*/
 
 unsigned char key_read(void)
@@ -308,34 +308,34 @@ unsigned char key_read(void)
         case key_state_0:
             if (key_temp == S_key )
             {
-                 key_time_1 = 0;               // µÚ1´Îµ¥»÷£¬²»·µ»Ø£¬µ½ÏÂ¸ö×´Ì¬ÅĞ¶ÏºóÃæÊÇ·ñ³öÏÖË«»÷
+                 key_time_1 = 0;               // ç¬¬1æ¬¡å•å‡»ï¼Œä¸è¿”å›ï¼Œåˆ°ä¸‹ä¸ªçŠ¶æ€åˆ¤æ–­åé¢æ˜¯å¦å‡ºç°åŒå‡»
                  key_m = key_state_1;
             }
             else
 								{
-									key_return = key_temp;        // ¶ÔÓÚÎŞ¼ü¡¢³¤¼ü£¬·µ»ØÔ­ÊÂ¼ş
+									key_return = key_temp;        // å¯¹äºæ— é”®ã€é•¿é”®ï¼Œè¿”å›åŸäº‹ä»¶
 								}
             break;
 
         case key_state_1:
-            if (key_temp == S_key)             // ÓÖÒ»´Îµ¥»÷£¨¼ä¸ô¿Ï¶¨<500ms£©
+            if (key_temp == S_key)             // åˆä¸€æ¬¡å•å‡»ï¼ˆé—´éš”è‚¯å®š<500msï¼‰
             {
-                 key_return = D_key;           // ·µ»ØË«»÷¼üÊÂ¼ş£¬»Ø³õÊ¼×´Ì¬
+                 key_return = D_key;           // è¿”å›åŒå‡»é”®äº‹ä»¶ï¼Œå›åˆå§‹çŠ¶æ€
                  key_m = key_state_0;
             }
             else                                
-            {                                  // ÕâÀï500msÄÚ¿Ï¶¨¶Áµ½µÄ¶¼ÊÇÎŞ¼üÊÂ¼ş£¬ÒòÎª³¤¼ü>1000ms£¬ÔÚ1sÇ°µÍ²ã·µ»ØµÄ¶¼ÊÇÎŞ¼ü
+            {                                  // è¿™é‡Œ500mså†…è‚¯å®šè¯»åˆ°çš„éƒ½æ˜¯æ— é”®äº‹ä»¶ï¼Œå› ä¸ºé•¿é”®>1000msï¼Œåœ¨1så‰ä½å±‚è¿”å›çš„éƒ½æ˜¯æ— é”®
                  if(++key_time_1 >= 20)
                  {
-                      key_return = S_key;      // 500msÄÚÃ»ÓĞÔÙ´Î³öÏÖµ¥¼üÊÂ¼ş£¬·µ»ØÉÏÒ»´ÎµÄµ¥¼üÊÂ¼ş
-                      key_m = key_state_0;     // ·µ»Ø³õÊ¼×´Ì¬
+                      key_return = S_key;      // 500mså†…æ²¡æœ‰å†æ¬¡å‡ºç°å•é”®äº‹ä»¶ï¼Œè¿”å›ä¸Šä¸€æ¬¡çš„å•é”®äº‹ä»¶
+                      key_m = key_state_0;     // è¿”å›åˆå§‹çŠ¶æ€
                  }
 
              break;
         case key_state_3:
             if (key_temp == L_key )
             {
-                 key_return = L_key;           // ·µ»Ø³¤»÷¼üÊÂ¼ş£¬»Ø³õÊ¼×´Ì¬
+                 key_return = L_key;           // è¿”å›é•¿å‡»é”®äº‹ä»¶ï¼Œå›åˆå§‹çŠ¶æ€
                  key_m = key_state_0;
             }
             break;
@@ -344,22 +344,23 @@ unsigned char key_read(void)
 	}     
 }
 
-void Timer0Init(void)		//50000Î¢Ãë@11.0592MHz
+void Timer0Init(void)		//50000å¾®ç§’@11.0592MHz
 {
-	AUXR &= 0x7F;		//¶¨Ê±Æ÷Ê±ÖÓ12TÄ£Ê½
-	TMOD &= 0xF0;		//ÉèÖÃ¶¨Ê±Æ÷Ä£Ê½
-	TL0 = 0x00;		//ÉèÖÃ¶¨Ê±³õÊ¼Öµ
-	TH0 = 0x4C;		//ÉèÖÃ¶¨Ê±³õÊ¼Öµ
-	TF0 = 0;		//Çå³ıTF0±êÖ¾
-	TR0 = 1;		//¶¨Ê±Æ÷0¿ªÊ¼¼ÆÊ±
+	AUXR &= 0x7F;		//å®šæ—¶å™¨æ—¶é’Ÿ12Tæ¨¡å¼
+	TMOD &= 0xF0;		//è®¾ç½®å®šæ—¶å™¨æ¨¡å¼
+	TL0 = 0x00;		//è®¾ç½®å®šæ—¶åˆå§‹å€¼
+	TH0 = 0x4C;		//è®¾ç½®å®šæ—¶åˆå§‹å€¼
+	TF0 = 0;		//æ¸…é™¤TF0æ ‡å¿—
+	TR0 = 1;		//å®šæ—¶å™¨0å¼€å§‹è®¡æ—¶
 }
 
 
 
 void main()
 {
-	    u8  i,j;
-	u16 Iap_tmp;
+	    u8  i;
+		  u8  Is_30S_ok = 0;
+//	u16 Iap_tmp;
  //char i;
   Timer0Init();
  UartInit();
@@ -369,7 +370,7 @@ void main()
 	
 
  hal_init_ADC();
-     P5M0 = 0x10;                                //ÉèÖÃP5.4ÎªÍÆÍìÊä³öÄ£Ê½
+     P5M0 = 0x10;                                //è®¾ç½®P5.4ä¸ºæ¨æŒ½è¾“å‡ºæ¨¡å¼
      P5M1 = 0x00;
 
      P54 = 0;  
@@ -378,7 +379,7 @@ void main()
     ET0 = 1;    //Timer0 interrupt enable
     TR0 = 1;    //Tiner0 run
 
-	  EA = 1;     //´ò¿ª×ÜÖĞ¶Ï
+	  EA = 1;     //æ‰“å¼€æ€»ä¸­æ–­
 		
 //									sprintf(string,"Start!\r\n");
 //								  SendString(string);
@@ -413,58 +414,54 @@ switch(IapRead(0x0400))
 	while (1)
 	{
    
-		//¼ì²éuart1ÊÕµ½µÄÊı¾İ
-        if(RX1_TimeOut > 0)     //³¬Ê±¼ÆÊı
+		//æ£€æŸ¥uart1æ”¶åˆ°çš„æ•°æ®
+        if(RX1_TimeOut > 0)     //è¶…æ—¶è®¡æ•°
         {
-					//for(i=0; i<RX1_Cnt; i++)    UartSend(RX1_Buffer[i]);//Ô­Ñù´«»Ø£¬ÓÃÓÚ²âÊÔ
+					//for(i=0; i<RX1_Cnt; i++)    UartSend(RX1_Buffer[i]);//åŸæ ·ä¼ å›ï¼Œç”¨äºæµ‹è¯•
 
 				 if(--RX1_TimeOut == 0 && RX1_Cnt == 6)
 					 {
 							//tmp = 0x00;
 							for(i=0; i<5; i++){
-								tmp[i]=RX1_Buffer[i];//È¡×îºóÒ»¸öÒÔÍâµÄÊı¾İ£¬ÓÃÓÚĞ£Ñé
-//								UartSend(tmp[i]);//Ô­Ñù´«»Ø£¬ÓÃÓÚ²âÊÔ
+								tmp[i]=RX1_Buffer[i];//å–æœ€åä¸€ä¸ªä»¥å¤–çš„æ•°æ®ï¼Œç”¨äºæ ¡éªŒ
+//								UartSend(tmp[i]);//åŸæ ·ä¼ å›ï¼Œç”¨äºæµ‹è¯•
 							}
 							BCC_State = RX1_Buffer[5];
 
-            if((tmp[0] == 0x55)&&(tmp[1] == 0x01)&&(BCC_State == calc_nmea_checksum(tmp)))//ÅĞ¶Ï°üÍ·(0x11)Í¬Ê±ÅĞ¶ÏÊÇ·ñÓĞÊı¾İÊÇ·ñ4¸ö
+            if((tmp[0] == 0x55)&&(tmp[1] == 0x01)&&(BCC_State == calc_nmea_checksum(tmp)))//åˆ¤æ–­åŒ…å¤´(0x11)åŒæ—¶åˆ¤æ–­æ˜¯å¦æœ‰æ•°æ®æ˜¯å¦4ä¸ª
             {
 							switch(tmp[2])
 							{
-        				case  0x11://½«½ÓÊÕµÄÖµÉèÖÃ³ÉADC_set
-									ADC_set =0;
-								  ADC_set += tmp[3];
-									ADC_set += tmp[4]<<8;
-    								sprintf(string,"ADC_SET is %d!\r\n",ADC_set);
-								  SendString(string);
+        				case  0x11://å°†æ¥æ”¶çš„å€¼è®¾ç½®æˆADC_set
+										ADC_set =0;
+										ADC_set += tmp[3];
+										ADC_set += tmp[4]<<8;
+    							sprintf(string,"ADC_SET is %d!\r\n",ADC_set);
+									SendString(string);
 									break;
-								case 0x12://´æ´¢ADC_Low
-									
+								case 0x12://å­˜å‚¨ADC_Low
 										IapErase(0x0200);
-										//IapErase(0x0411);
-										IapProgram(0x0200, tmp[3]);//Ğ´ÈëµÍÎ»	
-										IapProgram(0x0201, tmp[4]);//Ğ´Èë¸ßÎ»									
-    								//sprintf(string,"ADC_LOW_SET is write\r\n",ADC_set);
+										IapProgram(0x0200, tmp[3]);//å†™å…¥ä½ä½	
+										IapProgram(0x0201, tmp[4]);//å†™å…¥é«˜ä½									
 								  sprintf(string,"ADC_LOW_SET is write %d!\r\n",ReadIapADC(0x0200));
 								  SendString(string);	
 									break;
-								case 0x13://´æ´¢ADC_High
+								case 0x13://å­˜å‚¨ADC_High
 										IapErase(0x0000);
-										//IapErase(0x0421);
-										IapProgram(0x0000, tmp[3]);//Ğ´ÈëµÍÎ»	
-										IapProgram(0x0001, tmp[4]);//Ğ´Èë¸ßÎ»									
-    								//sprintf(string,"ADC_LOW_SET is write\r\n",ADC_set);
+										IapProgram(0x0000, tmp[3]);//å†™å…¥ä½ä½	
+										IapProgram(0x0001, tmp[4]);//å†™å…¥é«˜ä½									
 								  sprintf(string,"ADC_HIGH_SET is write %d!\r\n",ReadIapADC(0x0000));
 								  SendString(string);	
 									break;
-								case 0x14://¸´Î»ADC_High£¬ADC_LowÉèÖÃ
+								case 0x14://å¤ä½ADC_Highï¼ŒADC_Lowè®¾ç½®
 										IapErase(0x0000);
 										IapErase(0x0200);
-										IapProgram(0x0000, 0x34);//Ğ´ÈëµÍÎ»	
-										IapProgram(0x0001, 0x03);//Ğ´Èë¸ßÎ»		
-										IapProgram(0x0200, 0x66);//Ğ´ÈëµÍÎ»	
-										IapProgram(0x0201, 0x03);//Ğ´Èë¸ßÎ»										
-    								//sprintf(string,"ADC_LOW_SET is write\r\n",ADC_set);
+										IapProgram(0x0000, 0x34);//å†™å…¥ä½ä½	
+										IapProgram(0x0001, 0x03);//å†™å…¥é«˜ä½		
+										IapProgram(0x0200, 0x66);//å†™å…¥ä½ä½	
+										IapProgram(0x0201, 0x03);//å†™å…¥é«˜ä½	
+								    IapErase(0x0400);
+										IapProgram(0x0400,0x00);//å¤ä½åŠ çƒ­åˆå§‹çŠ¶æ€								
 								  sprintf(string,"ADC_HIGH_SET reset to %d!\r\n",ReadIapADC(0x0000));
 								  SendString(string);	
 									sprintf(string,"ADC_LOW_SET reset to %d!\r\n",ReadIapADC(0x0200));
@@ -486,82 +483,78 @@ switch(IapRead(0x0400))
 				
 			if(pwm_count>20)   pwm_count=0;	 
 
-       if (time_10ms_ok)            //Ã¿50msÖ´ĞĞÒ»´Î£¬  
+       if (time_50ms_ok)            //æ¯50msæ‰§è¡Œä¸€æ¬¡ï¼Œ  
         {  
-             time_10ms_ok =0;  
+             time_50ms_ok =0;  
 
-							 key = key_read();       //¡¶====== 50msÒ»´Îµ÷ÓÃ°´¼üÖĞ¼ä²ãº¯Êı  
+							 key = key_read();       //ã€Š====== 50msä¸€æ¬¡è°ƒç”¨æŒ‰é”®ä¸­é—´å±‚å‡½æ•°  
 
-									api_read_adc(&adc_value,2 );								
+							 api_read_adc(&adc_value,2 );			//è¯»å–ntc10ké˜»å€¼ï¼Œè·å–æ¸©åº¦ä¿¡æ¯					
 
-    					WDT_CONTR = 0x37;  //watchdog clear			
+    					WDT_CONTR = 0x37;  //çœ‹é—¨ç‹—å¤ä½			
 					
 							if(key == S_key)
 							{
 							ADC_set = ADC_low; //30C
 								    IapErase(0x0400);
-										IapProgram(0x0400, 0x12);//write low-heater	
+										IapProgram(0x0400, 0x12);//è®°å½•æ¸©åº¦ä½åŠ çƒ­åˆå§‹çŠ¶æ€	
 							}
 							if(key == D_key){
 								ADC_set = ADC_high;  //40C
 								    IapErase(0x0400);
-										IapProgram(0x0400, 0x24);//write high-heater
+										IapProgram(0x0400, 0x24);//è®°å½•æ¸©åº¦é«˜åŠ çƒ­åˆå§‹çŠ¶æ€
 							}
 							if(key == L_key){
 								ADC_set=0;
 								    IapErase(0x0400);
-										IapProgram(0x0400,0x00);//write close-heater
-								P55 = 0;//qiangzhi close
+										IapProgram(0x0400,0x00);//å¤ä½åŠ çƒ­åˆå§‹çŠ¶æ€
+								P55 = 0;//å¼ºåˆ¶å…³é—­è¾“å‡º
 							}
 							if(ADC_set > 0){
-//								sprintf(string,"ADC_SET is %d\r\n",ADC_set);
-//								  SendString(string);
 								
-										if(adc_value < ADC_set-5)//µ½ÎÂ¶È×î¸ßµã£¬¹Ø±ÕÊä³ö
+										if(adc_value < ADC_set-5)//åˆ°æ¸©åº¦æœ€é«˜ç‚¹ï¼Œå…³é—­è¾“å‡º
 											{
 												pwm = 0;
 												P55=0;
 											}
-											else  if(adc_value > ADC_set)//²»µ½
+											else  if(adc_value > ADC_set)//ä¸åˆ°
 											{
-											if(adc_value < ADC_set+10)// near adc_set
-												{
-														pwm = 17;
-												}
-												else if(adc_value < ADC_set+20)  //adc_set mid
-												{
-													  pwm=17;
-												}
-												else  //adc_set low
-												{
-														pwm=18;
-												}
+													if(adc_value < ADC_set+20)// æ¥è¿‘é¢„è®¾å€¼
+														{
+																			pwm = 17;
+														}
+														else  //é™åˆ¶è¾“å‡ºï¼Œé˜²æ­¢è½¦è¾†ä¿é™©æŠ¥é”™
+														{
+																			pwm = 18;
+														}
 											}
-											else //adc_set -- adc_set-5
-											{
-									      pwm = 17;
-											}
-									}else
-							{
-										pwm = 0;
-							}
+												else{//åˆ°è¾¾é¢„è®¾å€¼ï¼Œé‡‡å–ä½åŠŸç‡ä¿æŒæ¸©åº¦
 
-							if(pwm > pwm_count){//start PWM
-								P55 = 1;
-							}else{
-								P55 = 0;
+																			pwm = 16;
+												}
+										}else//å¦‚æœadc_set <= 0
+											{
+												pwm = 0;
+											}
+
+							if((pwm > pwm_count)&&(Is_30S_ok < 59)){////è¿ç»­è¾“å‡º30S ä¼‘æ¯ä¸€ä¸‹,å¼€å§‹ PWMè¾“å‡º
+									P55 = 1;
+								}else{
+									if(Is_30S_ok >79) Is_30S_ok = 00;//è¾“å‡º30S ä¼‘æ¯10S
+									P55 = 0;
 							}
-							pwm_count++;
+							pwm_count++;//pwmè®¡æ•°
+							Is_30S_ok++;//30SåŠ çƒ­è®¡æ•°
 				}
 	}
 }
 
 
-void timer0() interrupt 1     //¶¨Ê±Æ÷T0ÖĞ¶Ïº¯ÊıÈë¿Ú,¼ì²â°´¼üÊäÈëÇé¿ö
+void timer0() interrupt 1     //å®šæ—¶å™¨T0ä¸­æ–­å‡½æ•°å…¥å£,æ£€æµ‹æŒ‰é”®è¾“å…¥æƒ…å†µ
 {
-     TH0=0X4C;             //³õÖµÖØÔØ
-     TL0=0X00;           //¶¨Ê±50ms=50000us; 50000/2=25000
-     time_10ms_ok = 1;
+     TH0=0X4C;             //åˆå€¼é‡è½½
+     TL0=0X00;           //å®šæ—¶50ms=50000us; 50000/2=25000
+     time_50ms_ok = 1;
      key_time++;        //50MS++
 }
 
