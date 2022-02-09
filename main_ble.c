@@ -390,21 +390,22 @@ void main()
 								  SendString(string);										
 									sprintf(string,"Adc_set_High is %d!\r\n",ADC_high);
 								  SendString(string);
-									
-		switch(IapRead(0x0400))  //获取上次保存的加热状态
-    {
-        case 0x00:
-						ADC_set = 0;
+			if(IapRead(0x0601) != 0){			//获取是否使用上次的保存状态					
+					switch(IapRead(0x0400))  //获取上次保存的加热状态
+					{
+						case 0x00:
+								ADC_set = 0;
 						break;
-				case 0x12:
-						ADC_set = ADC_low;
-				break;
-				case 0x24:
-						ADC_set = ADC_high;
+						case 0x12:
+								ADC_set = ADC_low;
 						break;
-				case 0xff:
-					  ADC_set = -1;
+						case 0x24:
+								ADC_set = ADC_high;
 						break;
+								case 0xff:
+								ADC_set = -1;
+						break;
+					}
 			}
 								  //SendString(string);		
 		  key=0;	
@@ -470,12 +471,19 @@ void main()
 								case 0x15://设置方向盘加热器为夏天模式，防止误触
 										IapErase(0x0600);
 										IapProgram(0x0600, tmp[3]);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
+										IapProgram(0x0601, tmp[4]);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
 										if(ReadIapADC(0x0600)) 
 											{
 												SendString("Wheel Heater button be Activated!\r\n");	
 											}else{
 												SendString("Wheel Heater button be Inactivated!\r\n");	
 											}
+										if(ReadIapADC(0x0601)) 
+											{
+												SendString("Wheel Heater Save Status be Activated!\r\n");	
+											}else{
+												SendString("Wheel Heater Save Status be Inactivated!\r\n");	
+											}											
 									break;
 								default:
 								  SendString("Command is wrong!\r\nPlease Tx 0x55 0x01 0x11--0x15 value BCC_code\r\n");									  
