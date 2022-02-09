@@ -468,10 +468,10 @@ void main()
 									sprintf(string,"ADC_LOW_SET reset to %d!\r\n",ReadIapADC(0x0200));
 								  SendString(string);	
 									break;
-								case 0x15://设置方向盘加热器为夏天模式，防止误触
+								case 0x15://设置方向盘加热器为夏天模式和是否启用保存的方向盘加热状态，防止误触
 										IapErase(0x0600);
 										IapProgram(0x0600, tmp[3]);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
-										IapProgram(0x0601, tmp[4]);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
+										IapProgram(0x0601, tmp[4]);//写入低位，00为关闭，01为激活使用保存的方向盘加热状态功能
 										if(ReadIapADC(0x0600)) 
 											{
 												SendString("Wheel Heater button be Activated!\r\n");	
