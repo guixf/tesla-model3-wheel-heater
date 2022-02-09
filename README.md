@@ -39,7 +39,9 @@
 
 0x14为复位命令，第四五位数值无效，复位成功后控制板返回字符串 ADC_HIGH_SET reset to 低数值!\r\nADC_LOW_SET reset to 高数值!\r\n。
 
-如第三位不是（0x11-0x14），则返回 Command is wrong!\r\nPlease Tx 0x55 0x01 0x11--0x14 value BCC_code\r\n。
+0x15为激活或关闭方向盘加热按钮控制功能，第四位数值为0，则关闭（第五位无效），其他数值为激活。设置成功后返回字符串 Wheel Heater button be Activated!\r\n 或者Wheel Heater button be Inactivated!\r\n。
+
+如第三位不是（0x11-0x15），则返回 Command is wrong!\r\nPlease Tx 0x55 0x01 0x11--0x15 value BCC_code\r\n。
 
 如不是0x55开头，或被操作设备地址不为0x01，或者校验码错误，则无返回。
 
