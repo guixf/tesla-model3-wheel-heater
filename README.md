@@ -43,6 +43,8 @@
 
 第五位数值为0，则关闭方向盘加热使用保存状态功能，其他数值为激活。设置成功后返回字符串 Wheel Heater Save Status be Activated!\r\n 或者Wheel Heater Save Status be Inactivated!\r\n。
 
+注意：第四位、第五位必须同时设置，如0x55 01 15 01 00 40表示激活方向盘按键功能，关闭使用保存状态。如0x55 01 15 00 01 40表示关闭方向盘按键功能，启用保存状态功能。
+
 如第三位不是（0x11-0x15），则返回 Command is wrong!\r\nPlease Tx 0x55 0x01 0x11--0x15 value BCC_code\r\n。
 
 如不是0x55开头，或被操作设备地址不为0x01，或者校验码错误，则无返回。
