@@ -26,6 +26,22 @@ typedef     unsigned long   u32;
 #define PWM2_OUT_1() PCA_PWM2 &=~3,CCAP2H = 0 //P55 全开输出
 
 
+/*EEPROM部分数据地址定义*/
+//预设值部分
+#define ADC_autoopen_low_Address 0x0000
+#define ADC_autoopen_high_Address 0x0001
+#define ADC_set_low_Address 0x0002
+#define ADC_set_high_Address 0x0003
+#define ADC_low_pwm_Address 0x0004
+#define ADC_high_pwm_Address 0x0005
+
+//上次保存的状态
+#define Heater_status_Address 0x0200
+
+//控制功能
+#define Heater_unable_Address 0x0400//方向盘加热按键控制功能激活状态保存地址，00为未激活，其他为激活
+#define Button_unable_Address 0x0401//Save_Button_activated);//00为关闭，01为激活使用保存的方向盘加热状态，02为激活防冻手功能
+
 u16 ADC_low = 0;
 u16 ADC_high = 0;
 u8  RX1_TimeOut;
@@ -36,7 +52,8 @@ bit B_TX1_Busy; //发送忙标志
 u8  BCC_State;    //异或结果
 
 u8   RX1_Buffer[UART1_BUF_LENGTH]; //接收缓冲
-u8   tmp[5];        //EEPROM操作缓冲
+u8   tmp[5];       				 //EEPROM操作缓冲
+u8   tmp_value[5];        //EEPROM操作缓冲
 
 bit busy;
 
@@ -98,13 +115,47 @@ void IapErase(int addr)
     IapIdle();                                  //关闭IAP功能
 }
 
-unsigned int ReadIapADC(int addr)
+/*unsigned int ReadIapADC(int addr)
 {
 	u16 Itmp = 0 ;
 			Itmp = IapRead(addr);
 			addr++;
 			Itmp += IapRead(addr)<<8;
 	return  Itmp;
+}
+*/
+unsigned int ReadIapADC(int addr)
+{
+	u16 Itmp = 0 ;
+			Itmp = IapRead(addr);
+			//addr++;
+			Itmp += 0x03<<8;
+	return  Itmp;
+}
+
+void ReadIapDefault(char tmp[])
+{
+	
+										tmp[0]=IapRead(ADC_autoopen_low_Address);//获取预设低温值
+										tmp[1]=IapRead(ADC_autoopen_high_Address);//获取高温预设值
+										tmp[2]=IapRead(ADC_set_low_Address);//获取预设低温值
+										tmp[3]=IapRead(ADC_set_high_Address);//获取高温预设值
+										tmp[4]=IapRead(ADC_low_pwm_Address);//获取预设低温值
+										tmp[5]=IapRead(ADC_high_pwm_Address);//获取高温预设值
+	
+}
+
+void WriteIapDefault(char *s)
+{
+										IapErase(ADC_autoopen_low_Address);//删除原有预设数据
+	
+										IapProgram(ADC_autoopen_low_Address,s[0]);//写入预设低温值
+										IapProgram(ADC_autoopen_high_Address, s[1]);//写入高温预设值
+										IapProgram(ADC_set_low_Address, s[2]);//获取预设低温值
+										IapProgram(ADC_set_high_Address,s[3]);//获取高温预设值
+										IapProgram(ADC_low_pwm_Address,s[4]);//获取预设低温值
+										IapProgram(ADC_high_pwm_Address,s[5]);//获取高温预设值
+	
 }
 
 void UartIsr() interrupt 4 
@@ -412,14 +463,7 @@ void main()
 
 			P54 = 0;  
 	    P33=0;
-//			P55 = 0;  
 
- 
-
-
-	   WDT_CONTR = 0x27; //启动看门狗，8s重启
-
-	
 
 
       ES = 1;	
@@ -429,44 +473,58 @@ void main()
 			EA = 1;     //打开总中断
 		
 
-
-										ADC_low = ReadIapADC(0x0200);
-										if (ADC_low > 1000||ADC_low < 700) ADC_low=850;
-										ADC_high = ReadIapADC(0x0000);
-										if (ADC_high <700 || ADC_high >1000) ADC_high=820;
-										ADC_LOW_SET_PWM = IapRead(0x0602);
-										//ADC_LOW_SET_PWM = ADC_LOW_SET_PWM>>8;
-										if(ADC_LOW_SET_PWM==0xff||ADC_LOW_SET_PWM==0) {
-												ADC_LOW_SET_PWM = 0xe6;		//默认0.9比例
-										}
-										ADC_HIGH_SET_PWM = IapRead(0x0603);
-										if(ADC_HIGH_SET_PWM==0xff||ADC_HIGH_SET_PWM==0) {
+					if(IapRead(Button_unable_Address)==0x02){
+										ADC_low = ReadIapADC(ADC_autoopen_low_Address);
+										ADC_high = ReadIapADC(ADC_autoopen_high_Address);
+					}else{
+										ADC_low = ReadIapADC(ADC_set_low_Address);					
+										ADC_high = ReadIapADC(ADC_set_high_Address);
+					}
+					if (ADC_low > 1000||ADC_low < 800) ADC_low=850;
+					if (ADC_high <800 || ADC_high >1000) ADC_high=820;
+						ADC_LOW_SET_PWM = IapRead(ADC_low_pwm_Address);
+					if(ADC_LOW_SET_PWM==0xff||ADC_LOW_SET_PWM==0) {
+										ADC_LOW_SET_PWM = 0xe6;		//默认0.9比例
+					}
+										ADC_HIGH_SET_PWM = IapRead(ADC_high_pwm_Address);
+					if(ADC_HIGH_SET_PWM==0xff||ADC_HIGH_SET_PWM==0) {
 												ADC_HIGH_SET_PWM = 0xdd;		//默认0.8比例
-										}										
-										Wheel_Heater_activated	= IapRead(0x0600);//读取方向盘加热按键控制功能激活状态，00为未激活，其他为激活
-										Save_Button_activated = IapRead(0x0601);
+					}										
+
+					Save_Button_activated = IapRead(Button_unable_Address);
+					if(Save_Button_activated ==0x02)  Wheel_Heater_activated = 1;//使用自动防冻手功能时，方向盘按键必须打开 
+								else Wheel_Heater_activated	= IapRead(Heater_unable_Address);//读取方向盘加热按键控制功能激活状态，00为未激活，其他为激活
+					
 									sprintf(string,"Adc_set_Low is %d!\r\nAdc_set_High is %d!\r\n",ADC_low,ADC_high);
 								  SendString(string);										
+									sprintf(string,"Adc_auto_Low is %d!\r\nAdc_auto_High is %d!\r\n",ReadIapADC(ADC_autoopen_low_Address),ReadIapADC(ADC_autoopen_high_Address));
+								  SendString(string);		
 									sprintf(string,"LOW_PWM & HIGH_PWM is 0x%04X,(%X)Useless.\r\n",ADC_LOW_SET_PWM,ADC_HIGH_SET_PWM);
 								  SendString(string);
 
 
-										if(!Wheel_Heater_activated) 
-											{
+  				if(!Wheel_Heater_activated) 
+						{
 												SendString("Wheel Heater button be Inactivated!\r\n");
-											}else{
-												SendString("Wheel Heater button be Activated!\r\n");		
-											}
-										if(!Save_Button_activated) 
-											{
+						}else{
+												SendString("Wheel Heater button be Activated!\r\n");	
+						}
+											
+					switch(Save_Button_activated){
+							case 0x00:
 												SendString("Wheel Heater Save Status be Inactivated!\r\n");	
-											}else{
+												break;
+							case 0x01:
 												SendString("Wheel Heater Save Status be Activated!\r\n");	
-											}	
+												break;
+							case 0x02:
+												SendString("Wheel Heater autoopen be Activated!\r\n");	
+												break;
+						}
+										
 											
-											
-			if(Save_Button_activated!=0){			//获取是否使用上次的保存状态					
-					switch(IapRead(0x0400))  //获取上次保存的加热状态
+			if(Save_Button_activated==0x01){			//获取是否使用上次的保存状态					
+					switch(IapRead(Heater_status_Address))  //获取上次保存的加热状态
 					{
 						case 0x00:
 								ADC_set = 0;
@@ -482,9 +540,17 @@ void main()
 								break;
 					}
 			}
+			
+					api_read_adc(&adc_value,2 );			//读取ntc10k阻值，获取温度信息		
+			
+			if(Save_Button_activated==0x02 && adc_value>ReadIapADC(ADC_autoopen_low_Address)){			//如果为自动模式，则判断是否低于预设温度					
+							ADC_set = ReadIapADC(ADC_autoopen_high_Address);
+//									sprintf(string,"ADC_autoopen_SET is write %d!\r\nADC_autoclose_SET is write %d!\r\n",ReadIapADC(0x0200),ReadIapADC(0x0201));
+//								  SendString(string);	
+			}
 								  //SendString(string);		
 		  key=0;	
-
+	   WDT_CONTR = 0x27; //启动看门狗，8s重启
 			
 		while (1)
 		{
@@ -516,76 +582,87 @@ void main()
 									  SendString(string);
    								P54 = 0;
 									break;
-								case 0x12://存储ADC_Low
+								case 0x12://存储ADC_auto
 									P54 =1 ;	
-										IapErase(0x0200);
-										IapProgram(0x0200, tmp[3]);//写入低位	
-										IapProgram(0x0201, tmp[4]);//写入高位		
-																	
-								  sprintf(string,"ADC_LOW_SET is write %d!\r\n",ReadIapADC(0x0200));
+									ReadIapDefault(tmp_value);
+									tmp_value[0] = tmp[3];//写入自动保暖功能时低于温度自动开启的ADC值，默认+0x0300	
+									tmp_value[1] = tmp[4];//写入自动保暖功能时保暖温度的ADC值，默认+0x0300
+								  WriteIapDefault(tmp_value);
+								  sprintf(string,"ADC_autoopen_SET is write %d!\r\nADC_autoclose_SET is write %d!\r\n",ReadIapADC(ADC_autoopen_low_Address),ReadIapADC(ADC_autoopen_high_Address));
 								  SendString(string);	
 									P54 =0;
 											IAP_CONTR = 0x60;//重启单片机
 									break;
-								case 0x13://存储ADC_High
+								case 0x13://存储ADC_NOM_Low_High
 									P54 =1 ;
-										IapErase(0x0000);
-										IapProgram(0x0000, tmp[3]);//写入低位	
-										IapProgram(0x0001, tmp[4]);//写入高位									
-								  sprintf(string,"ADC_HIGH_SET is write %d!\r\n",ReadIapADC(0x0000));
+									ReadIapDefault(tmp_value);
+									tmp_value[2] = tmp[3];//写入低温预设的ADC值，默认+0x0300	
+									tmp_value[3] = tmp[4];//写入高温预设的ADC值，默认+0x0300
+								  WriteIapDefault(tmp_value);
+
+/*						for(i=0; i<6; i++){
+//								tmp[i]=tmp_value[i];//取最后一个以外的数据，用于校验
+								UartSend(tmp_value[i]);//原样传回，用于测试
+							}
+													
+*/
+  								sprintf(string,"ADC_Low_SET is write %d!\r\nADC_High_SET is write %d!\r\n",ReadIapADC(ADC_set_low_Address),ReadIapADC(ADC_set_high_Address));
 								  SendString(string);	
 								P54 = 0;
 											IAP_CONTR = 0x60;//重启单片机
 									break;
 								case 0x14://复位ADC_High，ADC_Low设置,写入低温pwm值和高温pwm值
   									P54 =1 ;
-										IapErase(0x0000);
-										IapErase(0x0200);
-										IapProgram(0x0000, 0x34);//写入低位	820
-										IapProgram(0x0001, 0x03);//写入高位		
-										IapProgram(0x0200, 0x52);//写入低位	850
-										IapProgram(0x0201, 0x03);//写入高位	
-								    IapErase(0x0400);
-										IapProgram(0x0400,0x00);//复位加热初始状态								
-											IapErase(0x0600);
-											IapProgram(0x0600, Wheel_Heater_activated);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
-											IapProgram(0x0601, Save_Button_activated);//写入低位，00为关闭，01为激活使用保存的方向盘加热状
-											if(tmp[3]!=0) 	IapProgram(0x0602,tmp[3]);   //写入第四位，值范围0x01-0xfe，为温度到达低温设置前全速加热的pwm值
-												else 	IapProgram(0x0602,ADC_LOW_SET_PWM);
-											if(tmp[4]!=0)   IapProgram(0x0603,tmp[4]);   //写入第五位，值范围0x01-0xfe，一般低于第四位，为已达到温度达到低温设置后限制加热功能的pwm，目的防止车辆保险报错。
-												else  IapProgram(0x0603,ADC_HIGH_SET_PWM);
+								
+									ReadIapDefault(tmp_value);
+									tmp_value[0] = 0x70;//写入自动保暖功能时低于温度自动开启的ADC值，默认+0x0300	
+									tmp_value[1] = 0x5c;//写入自动保暖功能时保暖温度的ADC值，默认+0x0300
+									tmp_value[2] = 0x52;//写入	850默认值
+									tmp_value[3] = 0x34;//写入	850默认值
+									if(tmp[3]!=0)  tmp_value[4] = tmp[3];
+											else tmp_value[4] = ADC_LOW_SET_PWM;
+									if(tmp[4]!=0)  tmp_value[5] = tmp[4];
+											else tmp_value[5] = ADC_HIGH_SET_PWM;
+								
+								  WriteIapDefault(tmp_value);
+							
 
-								sprintf(string,"ADC_HIGH_SET reset to %d!\r\n",ReadIapADC(0x0000));
+								sprintf(string,"ADC_HIGH_SET reset to %d!\r\n",ReadIapADC(ADC_set_high_Address));
 									SendString(string);	
-								  sprintf(string,"ADC_LOW_SET reset to %d!\r\n",ReadIapADC(0x0200));
+								  sprintf(string,"ADC_LOW_SET reset to %d!\r\n",ReadIapADC(ADC_set_low_Address));
 								  SendString(string);	
-								sprintf(string,"Heater,SaveBut,LOW_PWM,HIGH_PWM is 0x%02X,0x%02X,0x%02X,(%X)Useless\r\n",(u16)IapRead(0x0600),(u16)IapRead(0x0601),IapRead(0x0602),IapRead(0x0603));
+								sprintf(string,"Heater,SaveBut,LOW_PWM,HIGH_PWM is 0x%02X,0x%02X,0x%02X,(%X)Useless\r\n",(u16)IapRead(Heater_unable_Address),(u16)IapRead(Button_unable_Address),IapRead(ADC_low_pwm_Address),IapRead(ADC_low_pwm_Address));
 								  SendString(string);									
 											P54 = 0;
 											IAP_CONTR = 0x60;//重启单片机
 										break;
 								case 0x15://设置方向盘加热器为夏天模式和是否启用保存的方向盘加热状态，防止误触
-																				P54 =1 ;
-										IapErase(0x0600);
-										IapProgram(0x0600, tmp[3]);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
-										IapProgram(0x0601, tmp[4]);//写入低位，00为关闭，01为激活使用保存的方向盘加热状态功能
-										IapProgram(0x0602,ADC_LOW_SET_PWM);//写入低温时pwm值
-										IapProgram(0x0603,ADC_HIGH_SET_PWM);//写入高温时pwm值
+											P54 =1 ;
+										IapErase(Heater_unable_Address);
+										IapProgram(Heater_unable_Address, tmp[3]);//写入低位，00为关闭，01为激活方向盘加热触摸控制功能
+										IapProgram(Button_unable_Address, tmp[4]);//写入低位，00为关闭，01为激活使用保存的方向盘加热状态功能；02为激活方向盘自动加热功能
+
 										
-								if(!IapRead(0x0600)) 
+								if(!IapRead(Heater_unable_Address)) 
 											{
 												SendString("Wheel Heater button be Inactivated!\r\n");
 											}else{
 												SendString("Wheel Heater button be Activated!\r\n");		
 											}
-										if(!IapRead(0x0601)) 
-											{
+
+								switch(IapRead(Button_unable_Address)){
+											case 0x00:
 												SendString("Wheel Heater Save Status be Inactivated!\r\n");	
-											}else{
+												break;
+											case 0x01:
 												SendString("Wheel Heater Save Status be Activated!\r\n");	
+												break;
+											case 0x02:
+												SendString("Wheel Heater autoopen be Activated!\r\n");	
+												break;
 											}
 											P54 = 0;
-											//IAP_CONTR = 0x60;//重启单片机
+
 									break;
 								default:
 								  SendString("Command is wrong!\r\n");
@@ -595,8 +672,8 @@ void main()
 							}
 						}else{
 							
-							//SendString("Wrong Command or Address or ");
-							//SendString("CRC errror!\r\nPlease Tx ");
+							SendString("Wrong Command or Address or ");
+							SendString("CRC errror!\r\nPlease Tx ");
 							SendString("0x55 0x01 0x11--0x15 value BCC_code\r\n");
 							RX1_Cnt = 0;
 							
@@ -607,7 +684,7 @@ void main()
             
 
 				
-//			if(pwm_count>20)   pwm_count=0;	 //每1S重新开始一次计时
+
 
       if (time_50ms_ok)            //每50ms执行一次，  
         {  
@@ -631,18 +708,24 @@ void main()
 							if(key == S_key)
 							{
 										ADC_set = ADC_low; //30C
-								    IapErase(0x0400);
-										IapProgram(0x0400, 0x12);//记录温度低加热初始状态	
+								    if(IapRead(Heater_unable_Address)==0x01){
+											IapErase(Heater_status_Address);
+											IapProgram(Heater_status_Address, 0x12);//记录温度低加热初始状态
+										}											
 							}
 							if(key == D_key){
 										ADC_set = ADC_high;  //40C
-								    IapErase(0x0400);
-										IapProgram(0x0400, 0x24);//记录温度高加热初始状态
+								    if(IapRead(Heater_unable_Address)==0x01){
+											IapErase(Heater_status_Address);
+										  IapProgram(Heater_status_Address, 0x24);//记录温度高加热初始状态
+										}
 							}
 							if(key == L_key){
 										ADC_set=0;
-								    IapErase(0x0400);
-										IapProgram(0x0400,0x00);//复位加热初始状态
+								    if(IapRead(Heater_unable_Address)==0x01){
+											IapErase(Heater_status_Address);
+											IapProgram(Heater_status_Address,0x00);//复位加热初始状态
+										}
 										pwm = 0;//强制关闭输出
 							}
 							if(ADC_set > 0){
@@ -650,21 +733,20 @@ void main()
 										if(adc_value < ADC_set-5)//到温度最高点，关闭输出
 											{
 												pwm = 0;
-												//P55=0;
 											}
-											else  if(adc_value > ADC_set)//不到
+											else  if(adc_value > ADC_set)//不到温度
 											{
 
-																		if(adc_value  < ReadIapADC(0x0200)){//限制输出，防止车辆保险报错
-																			//pwm = 17;
+																		if(adc_value  < ReadIapADC(ADC_set_low_Address)){//限制输出，防止车辆保险报错
+																			
 																			pwm = ADC_HIGH_SET_PWM;//0.85比例
 																		}else{
-																			//pwm = 18;
+																			
 																			pwm = ADC_LOW_SET_PWM;//0.9比例
 																		}
 											}else{//到达预设值，采取低功率保持温度
 
-																			//pwm = 16;
+																			
 																			pwm = 205; //0.8比例
 												}
 										}else//如果adc_set <= 0
