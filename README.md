@@ -28,20 +28,24 @@
 
 5.用手机易加蓝牙app可写入高低温度作为预设值。
 
-6.蓝牙传送格式为 0x55 0x01 0x11 36 03 75,其中0x55 为命令引导符，0x01 为被操作设备地址 （本控制器设置为01），第三位为命令（0x11-0x14），第四五位为十六进制数值，低位在前，高位在后，最后一位为前面5位十六进制数据的异或校验值。
+6.开机后控制板返回自检值。
+
+7.蓝牙传送格式为 0x55 0x01 0x11 36 03 75,其中0x55 为命令引导符，0x01 为被操作设备地址 （本控制器设置为01），第三位为命令（0x11-0x14），第四五位为十六进制数值，低位在前，高位在后，最后一位为前面5位十六进制数据的异或校验值。
 
 0x11为直接设置温度命令，0x36 0x03 为16进制adc值（低温默认值为860 ，高温默认值为810）。
 设置成功后控制板返还字符串 ADC_SET is 830! 830为第四五位十六进制数值转换后的十进制数值。
 
-0x12为设置低温温度预设值命令，写入成功后控制板返回字符串 ADC_LOW_SET is write 830!。
+0x12为设置防冻手功能温度预设值命令，低温在前、高温在后。例：0x55 0x01 0x12 0x70 0x5C 0x6A 。写入成功后控制板返回字符串"ADC_autoopen_SET is write 880!\r\nADC_autoclose_SET is write 860!\r\n。
 
-0x13为设置高温温度预设值命令，写入成功后控制板返回字符串 ADC_HIGH_SET is write 810!。
+0x13为设置按键控制高低温温度预设值命令，低温在前、高温在后。例：0x55 0x01 0x13 0x52 0x34 0x34 。写入成功后控制板返回字符串 ADC_HIGH_SET is write 820!\r\nADC_LOW_SET reset to 850!\r\n。
 
-0x14为复位命令，第四五位数值无效，复位成功后控制板返回字符串 ADC_HIGH_SET reset to 低数值!\r\nADC_LOW_SET reset to 高数值!\r\n。
+0x14为复位命令，复位ADC_autoopen_SET,ADC_autoclose_SETADC_High，ADC_Low设置,写入低温pwm值和高温pwm值，例：0x55 0x01 0x14 0xe6 0xdd 0x7B 。复位成功后控制板重新启动。
 
 0x15为激活或关闭方向盘加热按钮控制和是否按上次状态使用方向盘加热功能功能，第四位数值为0，则关闭方向盘加热按钮控制功能，其他数值为激活。设置成功后返回字符串 Wheel Heater button be Activated!\r\n 或者Wheel Heater button be Inactivated!\r\n。
 
-第五位数值为0，则关闭方向盘加热使用保存状态功能，其他数值为激活。设置成功后返回字符串 Wheel Heater Save Status be Activated!\r\n 或者Wheel Heater Save Status be Inactivated!\r\n。
+第五位数值为0，则关闭方向盘加热使用保存状态功能，0x01为激活保存状态功能,0x02为打开方向盘防冻手功能。设置成功后返回字符串 Wheel Heater Save Status be Activated!\r\n 或者Wheel Heater Save Status be Inactivated!\r\n。或者Wheel Heater autoopen be Activated!\r\n。
+
+当方向盘防冻手功能打开后，方向盘加热按钮控制功能自动打开，不受第四位数值的影响。
 
 注意：第四位、第五位必须同时设置，如0x55 01 15 01 00 40表示激活方向盘按键功能，关闭使用保存状态。如0x55 01 15 00 01 40表示关闭方向盘按键功能，启用保存状态功能。
 
